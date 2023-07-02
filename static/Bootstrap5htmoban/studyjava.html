@@ -377,7 +377,15 @@
 
       <div class="app-card app-card-accordion shadow-sm mb-4">
         <div class="app-card-header p-3">
-          问题名称：<input class="app-card-title" style="width: 70%" v-model="inputQuestion"  @keyup.enter="queryAcutalAnswer" />
+          问题名称：<input class="app-card-title" style="width: 60%" v-model="inputQuestion"
+                      @keyup.enter="queryAcutalAnswer"/>
+          <div>
+            问题类型：<input class="app-card-title" style="width: 10%" v-model="inputAnswerType"
+                        @keyup.enter="queryAcutalAnswer" @input="getSuggestions"/>
+            <ul v-show="showSuggestions" class=" suggestions" style="width: 10%;margin-left:5rem">
+              <li v-for="(item,index) in suggestions" @click="selectSuggestion(item)" :key="index">{{index+1}}、{{item}}</li>
+            </ul>
+          </div>
           <button @click="queryAcutalAnswer">查询</button>
         </div>
         <div class="app-card-body p-4 pt-0" id="forvue">
@@ -395,7 +403,7 @@
               </div>
               <div class="panel-collapse collapse" aria-labelledby="faq2-heading-1"
                    data-parent="#faq2-accordion">
-               <div class="card-body" v-html="formattedText(item2.resultQuestionAnswer)">
+                <div class="card-body" v-html="formattedText(item2.resultQuestionAnswer)">
                 </div>
               </div>
             </div>
@@ -430,7 +438,6 @@
                 </div>
               </div>
             </div>
-
             <div class="card">
               <div class="card-header" id="faq3-heading-2">
                 <h4 class="card-title">
@@ -598,10 +605,14 @@
       //在 Chrome 的控制台中打印 Vue 项目的属性值
       window.vue = this
       _this = this;
+
     },
     computed: {},
     data:
       {
+        suggestions: [],
+        inputAnswerType: '',
+        showSuggestions: false,
         queryResultShow: false,
         chooseAnswer:
           '',
@@ -620,6 +631,30 @@
       }
     ,
     methods: {
+      getSuggestions() {
+        // 发送Ajax请求或调用API获取搜索提示结果
+        // 假设这里使用一个简单的示例数据
+        this.$axios.post("/question/query",
+          {"inputQuestion": this.inputQuestion, "inputAnswerType": this.inputAnswerType}
+        ).then(/*注意箭头函数和普通函数的区别：https://juejin.cn/post/6855129005941293064*/
+          response => {
+            var resultType = response.data.resultType;
+            if (resultType == '1') {
+              this.suggestions = response.data.questionTypes;
+            }
+          }
+        ).catch(ERR =>
+          alert(ERR.message)
+        );
+        this.suggestions.filter(suggestion =>
+          suggestion.toLowerCase().includes(this.inputAnswerType.toLowerCase())
+        );
+        this.showSuggestions = true;
+      },
+      selectSuggestion(item) {
+        this.inputAnswerType = item;
+        this.showSuggestions = false;
+      },
       formattedText(value) {
         const lines = value.split('。').filter(line => line.trim() !== '');
         return lines.join('<br>');
@@ -629,16 +664,12 @@
       }
       ,
       queryAcutalAnswer() {
-        if (typeof this.inputQuestion === 'undefined') {
-          alert("问题名称为空，请重新输入！");
-          return;
-        }
-
         this.$axios.post("/question/query",
-          {"inputQuestion": this.inputQuestion}
+          {"inputQuestion": this.inputQuestion, "inputAnswerType": this.inputAnswerType}
         ).then(/*注意箭头函数和普通函数的区别：https://juejin.cn/post/6855129005941293064*/
           response => {
             var resultType = response.data.resultType;
+            var questionTypes = response.data.questionTypes;
             if (resultType == '1') {
               this.resultQuestions = response.data.resultQuestions;
               alert("查询成功");
