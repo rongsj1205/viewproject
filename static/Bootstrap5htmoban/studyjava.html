@@ -383,7 +383,9 @@
             问题类型：<input class="app-card-title" style="width: 10%" v-model="inputAnswerType"
                         @keyup.enter="queryAcutalAnswer" @input="getSuggestions"/>
             <ul v-show="showSuggestions" class=" suggestions" style="width: 10%;margin-left:5rem">
-              <li v-for="(item,index) in suggestions" @click="selectSuggestion(item)" :key="index">{{index+1}}、{{item}}</li>
+              <li v-for="(item,index) in suggestions" @click="selectSuggestion(item)" :key="index">
+                {{index+1}}、{{item}}
+              </li>
             </ul>
           </div>
           <button @click="queryAcutalAnswer">查询</button>
@@ -627,14 +629,14 @@
         resultQuestions:
           [{resultQuestionName: 'resultQuestionName', resultQuestionAnswer: 'resultQuestionAnswer'}],
         questions:
-          [{question: 'JDK 和 JRE 有什么区别？', hide: false, anwser: '', type: 'JAVA'}]
+          [{question: '', hide: true, anwser: '', type: ''}]
       }
     ,
     methods: {
       getSuggestions() {
         // 发送Ajax请求或调用API获取搜索提示结果
         // 假设这里使用一个简单的示例数据
-        this.$axios.post("/question/query",
+        this.$axios.post("/question/query2",
           {"inputQuestion": this.inputQuestion, "inputAnswerType": this.inputAnswerType}
         ).then(/*注意箭头函数和普通函数的区别：https://juejin.cn/post/6855129005941293064*/
           response => {
@@ -646,8 +648,9 @@
         ).catch(ERR =>
           alert(ERR.message)
         );
-        this.suggestions.filter(suggestion =>
-          suggestion.toLowerCase().includes(this.inputAnswerType.toLowerCase())
+        this.suggestions = this.suggestions.filter(
+          suggestion =>
+            suggestion.toLowerCase().includes(this.inputAnswerType.toLowerCase())
         );
         this.showSuggestions = true;
       },
@@ -664,7 +667,7 @@
       }
       ,
       queryAcutalAnswer() {
-        this.$axios.post("/question/query",
+        this.$axios.post("/question/query2",
           {"inputQuestion": this.inputQuestion, "inputAnswerType": this.inputAnswerType}
         ).then(/*注意箭头函数和普通函数的区别：https://juejin.cn/post/6855129005941293064*/
           response => {
@@ -708,7 +711,7 @@
         this.$axios.post("/question/record",
           {
             "questionName": this.chooseQuestion,
-            "questionType": "JAVA",
+            "questionType": this.chooseType,
             "questionAnswer": this.chooseAnswer,
             "questionLink": ""
           }
